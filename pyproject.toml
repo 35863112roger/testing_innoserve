@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "testing-innoserve"
+version = "0.1.0"
+description = "整合 TAIDE LoRA 摘要、BERT 上下文分類與 MCP 工具的本機 UI"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "accelerate>=1,<2",
+  "bitsandbytes>=0.46,<1",
+  "fastapi>=0.115,<1",
+  "mcp[cli]>=2,<3",
+  "peft>=0.20,<1",
+  "playwright>=1.45,<2",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "requests>=2.32,<3",
+  "safetensors>=0.5,<1",
+  "sentencepiece>=0.2,<1",
+  "streamlit>=1.42,<2",
+  "torch>=2.3,<3",
+  "transformers>=5,<6",
+  "uvicorn[standard]>=0.34,<1",
+  "chromadb>=1,<2",
+  "ollama>=0.5,<1",
+  "rank-bm25>=0.2,<1",
+  "beautifulsoup4>=4.12,<5",
+  "scikit-learn>=1.6,<2",
+  "truststore>=0.10,<1",
+  "numpy>=1.26,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8,<9",
+]
+
+[tool.setuptools.packages.find]
+include = ["backend*", "mcp_servers*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

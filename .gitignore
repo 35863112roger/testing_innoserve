@@ -1,0 +1,14 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/
+data/
+.vscode/
+*.egg-info/
+.DS_Store
+
+# 模型權重只以本機符號連結引用，不提交 Git。
+model_artifacts/*
+!model_artifacts/README.md
