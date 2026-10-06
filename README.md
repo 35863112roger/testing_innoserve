@@ -19,42 +19,68 @@
 9. UI 顯示摘要、留言風險樹、RAG 資訊與類似案件裁判書。
 
 
-## 模型與來源專案
+## 模型與下載來源
 
-模型權重沒有複製，`model_artifacts/` 使用符號連結：
+大型模型權重不提交至 GitHub。自行微調的 BERT 與摘要 LoRA 已公開於
+Hugging Face；下載後統一放在 `model_artifacts/`：
 
-- `summary-base`：`chengxi0618/taidelx7bchattv1` 本機快取。
-- `summary-adapter`：`summary_training_package/adapters/taide-lx-7b-short`。
-- `bert-context`：`threads_tree/.../ckip_baseline_v2_seed42/best_model`。
+| 本機目錄 | 用途 | Hugging Face |
+|---|---|---|
+| `bert-context` | Threads 留言四分類 | [`jgigivjry/threads-comment-risk-bert`](https://huggingface.co/jgigivjry/threads-comment-risk-bert) |
+| `summary-adapter` | TAIDE Threads 摘要 LoRA | [`jgigivjry/threads-summary-taide`](https://huggingface.co/jgigivjry/threads-summary-taide) |
+| `summary-base` | 摘要基礎模型 | [`chengxi0618/taidelx7bchattv1`](https://huggingface.co/chengxi0618/taidelx7bchattv1) |
 
 Threads 快取與 Collector 路徑設定在 `.env`：
 
 - `THREADS_TREE_DATA_DIR`：本系統獨立的 `data/threads_tree` 根目錄。
-- `THREADS_COLLECTOR_SCRIPT`：唯讀重用的原始 Playwright Collector 程式。
+- `THREADS_COLLECTOR_SCRIPT`：專案內的 Playwright Collector 程式。
 - `THREADS_COLLECTOR_PROFILE_DIR`：本系統獨立的 Playwright 登入狀態。
 
-原始 Collector 由 `mcp_servers/threads_collector_runner.py` 載入；runner 會將
+Collector 位於 `collectors/threads_tree_collector.py`，並由
+`mcp_servers/threads_collector_runner.py` 載入；runner 會將
 `OUTPUT_DIR` 與 `PROFILE_DIR` 改到 `testing_innoserve/data/`，因此新抓取的 JSON、
-媒體與瀏覽器狀態不會寫入 `threads_tree/data/`。
+媒體與瀏覽器登入狀態都保存在本專案內。
 
 ## 安裝
 
-進入專案並啟用環境：
-* 須根據自己的電腦路徑做修正 RAEDME.md 的呈現僅供參考
+下載專案並建立獨立的 Python 虛擬環境：
 
 ```bash
-cd /media/user/bad06345-7e07-45be-b246-b01172f6655a/11463137/testing_innoserve
-source .venv/bin/activate
+git clone https://github.com/35863112roger/testing_innoserve.git
+cd testing_innoserve
+python3 -m venv .venv
 ```
 
-若尚未安裝專案套件：
+安裝專案套件與 Playwright Chromium：
 
 ```bash
-python -m pip install -e '.[dev]'
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -e '.[dev]'
+.venv/bin/python -m playwright install chromium
+```
+
+下載 BERT、摘要 LoRA 與摘要基礎模型：
+
+```bash
+.venv/bin/hf download jgigivjry/threads-comment-risk-bert \
+  --local-dir model_artifacts/bert-context
+
+.venv/bin/hf download jgigivjry/threads-summary-taide \
+  --local-dir model_artifacts/summary-adapter
+
+.venv/bin/hf download chengxi0618/taidelx7bchattv1 \
+  --local-dir model_artifacts/summary-base
+```
+
+建立本機設定檔；`.env.example` 已使用專案相對路徑：
+
+```bash
+cp .env.example .env
 ```
 
 摘要模型在 CUDA 上使用 bitsandbytes 4-bit NF4 量化；`bitsandbytes` 已列入
-`pyproject.toml`，執行上述指令時會一併安裝。
+`pyproject.toml`，安裝專案套件時會一併安裝。後續指令皆應在
+`testing_innoserve` 專案根目錄執行。
 
 ## 啟動系統
 
@@ -87,9 +113,8 @@ ollama serve
 ### Terminal 1：FastAPI 與 Processing Pipeline
 
 ```bash
-cd /media/user/bad06345-7e07-45be-b246-b01172f6655a/11463137/testing_innoserve
-source .venv/bin/activate
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+cd testing_innoserve
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 正式展示時不使用 `--reload`，避免大型模型因程式重新載入而重複初始化。
@@ -102,10 +127,9 @@ curl http://127.0.0.1:8000/api/health
 ### Terminal 2：Streamlit 前端
 
 ```bash
-cd /media/user/bad06345-7e07-45be-b246-b01172f6655a/11463137/testing_innoserve
-source .venv/bin/activate
+cd testing_innoserve
 WORKBENCH_API_URL=http://127.0.0.1:8000 \
-python -m streamlit run frontend/app.py \
+.venv/bin/python -m streamlit run frontend/app.py \
   --server.address 127.0.0.1 \
   --server.port 8501 \
   --server.headless true
@@ -145,7 +169,7 @@ MCP 預設使用 in-process transport，因此不需要另外啟動 MCP Server�
 如需獨立測試 Streamable HTTP MCP Server：
 
 ```bash
-python -m uvicorn mcp_servers.internal_tools:app --host 127.0.0.1 --port 8001
+.venv/bin/python -m uvicorn mcp_servers.internal_tools:app --host 127.0.0.1 --port 8001
 ```
 
 並在 `.env` 設定：
@@ -228,8 +252,9 @@ UI 的「留言分類」仍以完整 `statistics` 顯示四種分類數量，但
 
 ## 即時抓取
 
-URL 沒有既有快取時，MCP 工具會呼叫 `threads_tree` 原專案的 Playwright Collector，
-但輸出與登入狀態使用本系統的獨立目錄：
+URL 沒有既有快取時，MCP 工具會呼叫本專案
+`collectors/threads_tree_collector.py` 的 Playwright Collector，輸出與登入狀態使用
+本系統的獨立目錄：
 
 ```text
 testing_innoserve/data/threads_tree
@@ -240,7 +265,7 @@ testing_innoserve/data/playwright_profile
 profile，不會修改原始 `threads_tree` 的登入資料：
 
 ```bash
-python scripts/playwright_login.py
+.venv/bin/python scripts/playwright_login.py
 ```
 
 即時抓取會逐頁確認留言父子關係。建議第一次先使用 30 個節點；預設至少保留
@@ -252,7 +277,7 @@ Collector 成功完成後，資料會寫入
 `THREADS_TREE_DATA_DIR/<requested_post_id>/`，包含 `*_tree.json`、
 `*_nodes.jsonl`、`*_raw_nodes.jsonl`、`*_excluded_nodes.jsonl`、`*_audit.json`
 及下載的媒體。已有成功快取時，未勾選「忽略快取」會直接重用 `*_tree.json`。
-目前原始 Collector 只在整次爬取完成後寫出結構化 JSON；若程序中途逾時，可能
+目前 Collector 只在整次爬取完成後寫出結構化 JSON；若程序中途逾時，可能
 只留下已下載的媒體，不能從中斷的節點自動續跑。
 
 分析期間，Streamlit 會每秒查詢 `/api/collection-progress/<post_id>`，顯示目前
