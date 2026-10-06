@@ -302,7 +302,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🔍 輿論放大鏡")
+st.title("🔍 輿論透視鏡")
 
 st.subheader(
     "Threads 串文摘要、逐留言分類與風險資訊"
