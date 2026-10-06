@@ -30,6 +30,7 @@ dependencies = [
   "scikit-learn>=1.6,<2",
   "truststore>=0.10,<1",
   "numpy>=1.26,<3",
+  "huggingface-hub>=1.5,<2.0",
 ]
 
 [project.optional-dependencies]

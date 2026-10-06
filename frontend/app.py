@@ -297,7 +297,7 @@ def _render_rag_result(
         )
 
 st.set_page_config(
-    page_title="輿論放大鏡",
+    page_title="輿論透視鏡",
     page_icon="🔍",
     layout="wide",
 )

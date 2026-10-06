@@ -1,4 +1,4 @@
-# 🔍 輿論放大鏡
+# 🔍 輿論透視鏡
 
 本系統整合 Threads 串文擷取、TAIDE LoRA 摘要、context-aware BERT
 逐留言分類、RAG 風險資訊與類似案件裁判書查詢。這個 UI 專門處理
