@@ -40,6 +40,7 @@ Threads 快取與 Collector 路徑設定在 `.env`：
 ## 安裝
 
 進入專案並啟用環境：
+* 須根據自己的電腦路徑做修正 RAEDME.md 的呈現僅供參考
 
 ```bash
 cd /media/user/bad06345-7e07-45be-b246-b01172f6655a/11463137/testing_innoserve
